@@ -8,14 +8,15 @@ import torch.nn.functional as F
 import numpy as np
 from torch.autograd import Variable
 import matplotlib.pyplot as plt
+import pandas as pd
 
 
 T = 0.5
-K = 2
-epochs = 256
-lambda_u = 75
-lr = 0.001
-label = 'test'
+K = 4
+epochs = 1500
+lambda_u = 16
+lr = 0.01
+label = "lambda"+str(lambda_u)+"K"+str(K)
 
 
 
@@ -35,7 +36,7 @@ def sharpen_targets(model, images, augment_K):
     return targets
 
 
-def linear_rampup(current, rampup_length=epochs):
+def linear_rampup(current, rampup_length=0):
     if rampup_length == 0:
         return 1.0
     else:
@@ -82,6 +83,8 @@ def train(train_loader, model, optimizer, train_criterion, use_cuda, epoch, ce_l
         out = model(img)
         outputs_sharpened = sharpen_targets(model, data_aug, K)
         Lx, Lu, w = train_criterion(ce_loss, out, label, outputs_sharpened, epoch)
+        entropy_loss = Lx.data.item()
+        consistency_loss = (w*Lu).data.item()
         loss = Lx + w * Lu
         print_loss = loss.data.item()
         sum_loss += print_loss
@@ -89,7 +92,7 @@ def train(train_loader, model, optimizer, train_criterion, use_cuda, epoch, ce_l
         loss.backward()
         optimizer.step()
     print('Epoch', epoch, 'Train Loss:', sum_loss)
-    return sum_loss
+    return sum_loss, entropy_loss, consistency_loss
 
 def watch(watch_loader, model, watch_criterion, use_cuda, epoch):
     sum_loss = 0.0
@@ -123,27 +126,40 @@ def valid(valid_loader, model, use_cuda, epoch):
         print('Epoch:', epoch, 'Val Acc:', acc)
         return acc   
 
-def plot_curve(epochs, train_losses, true_losses, valid_accs, label):
+def plot_curve(epochs, train_losses, true_losses, valid_accs, ce_losses, cons_losses, label):
     epoch_num = epochs
     x1 = range(0, epoch_num)
     x2 = range(0, epoch_num)
     x3 = range(0, epoch_num)
-    plt.subplot(3, 1, 1)
+    x4 = range(0, epoch_num)
+    x5 = range(0, epoch_num)
+    plt.subplot(5, 1, 1)
     plt.plot(x1, valid_accs, 'o-')
-    plt.title('Validation indicators vs. epoches')
-    plt.ylabel('Validation accuracy')
-    plt.subplot(3, 1, 2)
+    plt.ylabel('Val Acc')
+    plt.subplot(5, 1, 2)
+    plt.plot(x4, ce_losses, '.-')
+    plt.ylabel('Loss 1')
+    plt.subplot(5, 1, 3)
+    plt.plot(x5, cons_losses, '.-')
+    plt.ylabel('Loss 2')
+    plt.subplot(5, 1, 4)
     plt.plot(x2, train_losses, '.-')
-    plt.xlabel('epochs')
-    plt.ylabel('Train loss')
-    plt.subplot(3, 1, 3)
+    plt.ylabel('Train Loss')
+    plt.subplot(5, 1, 5)
     plt.plot(x3, true_losses, '.-')
     plt.xlabel('epochs')
-    plt.ylabel('True loss')
-    plt.savefig(label +".png")
+    plt.ylabel('True Loss')
+    plt.savefig('./logs/'+label +".png")
+
+def log(tag, train_loss, true_loss, val_acc, e_losses, c_losses):
+    data = {'train loss':train_loss, "true loss":true_loss, "val acc":val_acc, 'loss term 1':e_losses, 'loss term 2':c_losses}
+    df = pd.DataFrame(data)
+    df.to_csv('./logs/'+label+tag+'.csv')
+
 
 def main():
     use_cuda = torch.cuda.is_available()
+    print("cuda:",use_cuda)
     model = mlp()
     if use_cuda:
         model = model.cuda()
@@ -151,18 +167,27 @@ def main():
     train_criterion = SemiLoss()
     ce_loss = LogEntropyLoss()
     watch_criterion = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.9, weight_decay=1e-4)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[200], gamma=0.1)
     train_losses = []
     true_losses = []
     valid_accs = []
+    cons_losses = []
+    entropy_losses = []
     for epoch in range(epochs):
-        train_loss = train(train_loader, model, optimizer, train_criterion, use_cuda, epoch, ce_loss)
+        train_loss, entropy_loss, cons_loss = train(train_loader, model, optimizer, train_criterion, use_cuda, epoch, ce_loss)
+        entropy_losses.append(entropy_loss)
+        cons_losses.append(cons_loss)
         train_losses.append(train_loss)
         true_loss = watch(watch_loader, model, watch_criterion, use_cuda, epoch)
         true_losses.append(true_loss)
         val_acc = valid(valid_loader, model, use_cuda, epoch)
         valid_accs.append(val_acc)
-    plot_curve(epochs, train_losses, true_losses, valid_accs, label)
+        if epoch % 200 == 1:
+            log(str(epoch), train_losses, true_losses, valid_accs, entropy_losses, cons_losses)
+        scheduler.step()
+    log(str(epoch), train_losses, true_losses, valid_accs, entropy_losses, cons_losses)
+    plot_curve(epochs, train_losses, true_losses, valid_accs, entropy_losses, cons_losses, label)
 
 
 if __name__ == '__main__':

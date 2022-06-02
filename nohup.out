@@ -1,0 +1,62 @@
+cuda: True
+Files already downloaded and verified
+Files already downloaded and verified
+2000
+/home/ec2-user/anaconda3/lib/python3.9/site-packages/torch/utils/data/dataloader.py
+Epoch 0 Train Loss: 617.4788018465042
+Epoch: 0 True Loss: 844.9454658031464
+Epoch: 0 Val Acc: 0.186
+Traceback (most recent call last):
+  File "/home/ec2-user/experiments/mixmatchonsubset/main.py", line 182, in <module>
+    main()
+  File "/home/ec2-user/experiments/mixmatchonsubset/main.py", line 168, in main
+    train_loss = train(train_loader, model, optimizer, train_criterion, use_cuda, epoch, ce_loss)
+  File "/home/ec2-user/experiments/mixmatchonsubset/main.py", line 90, in train
+    loss.backward()
+  File "/home/ec2-user/anaconda3/lib/python3.9/site-packages/torch/_tensor.py", line 363, in backward
+    torch.autograd.backward(self, gradient, retain_graph, create_graph, inputs=inputs)
+  File "/home/ec2-user/anaconda3/lib/python3.9/site-packages/torch/autograd/__init__.py", line 166, in backward
+    grad_tensors_ = _make_grads(tensors, grad_tensors_, is_grads_batched=False)
+  File "/home/ec2-user/anaconda3/lib/python3.9/site-packages/torch/autograd/__init__.py", line 68, in _make_grads
+    new_grads.append(torch.ones_like(out, memory_format=torch.preserve_format))
+KeyboardInterrupt
+cuda: True
+Files already downloaded and verified
+Files already downloaded and verified
+2000
+/home/ec2-user/anaconda3/lib/python3.9/site-packages/torch/utils/data/dataloader.py
+Epoch 0 Train Loss: 617.0181216001511
+Epoch: 0 True Loss: 845.528537273407
+Epoch: 0 Val Acc: 0.1935
+Epoch 1 Train Loss: 598.6290127038956
+Epoch: 1 True Loss: 815.4782251119614
+Epoch: 1 Val Acc: 0.265
+Traceback (most recent call last):
+  File "/home/ec2-user/experiments/mixmatchonsubset/main.py", line 182, in <module>
+    main()
+  File "/home/ec2-user/experiments/mixmatchonsubset/main.py", line 168, in main
+    train_loss = train(train_loader, model, optimizer, train_criterion, use_cuda, epoch, ce_loss)
+  File "/home/ec2-user/experiments/mixmatchonsubset/main.py", line 73, in train
+    for data in train_loader:
+  File "/home/ec2-user/anaconda3/lib/python3.9/site-packages/torch/utils/data/dataloader.py", line 530, in __next__
+    data = self._next_data()
+  File "/home/ec2-user/anaconda3/lib/python3.9/site-packages/torch/utils/data/dataloader.py", line 570, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+  File "/home/ec2-user/anaconda3/lib/python3.9/site-packages/torch/utils/data/_utils/fetch.py", line 49, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/ec2-user/anaconda3/lib/python3.9/site-packages/torch/utils/data/_utils/fetch.py", line 49, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/ec2-user/experiments/mixmatchonsubset/utils.py", line 45, in __getitem__
+    img = self.transform(img)
+  File "/home/ec2-user/anaconda3/lib/python3.9/site-packages/torchvision/transforms/transforms.py", line 95, in __call__
+    img = t(img)
+  File "/home/ec2-user/experiments/mixmatchonsubset/cifar10.py", line 82, in __call__
+    x = pad(x, 4)
+  File "/home/ec2-user/experiments/mixmatchonsubset/cifar10.py", line 63, in pad
+    return np.pad(x, [(0, 0), (border, border), (border, border)], mode='reflect')
+  File "<__array_function__ internals>", line 5, in pad
+  File "/home/ec2-user/anaconda3/lib/python3.9/site-packages/numpy/lib/arraypad.py", line 793, in pad
+    padded, original_area_slice = _pad_simple(array, pad_width)
+  File "/home/ec2-user/anaconda3/lib/python3.9/site-packages/numpy/lib/arraypad.py", line 109, in _pad_simple
+    new_shape = tuple(
+KeyboardInterrupt

@@ -3,7 +3,6 @@ import torch
 import numpy as np
 import math
 from sklearn.metrics import accuracy_score
-from torchvision import transforms as T
 import torch.utils.data as Data
 import torch.utils.data 
 from torchvision import datasets
@@ -13,7 +12,7 @@ import cifar10 as dataset
 
 
 batch_size = 128
-augment_K = 2
+augment_K = 4
 
 transform_train = transforms.Compose([
         dataset.RandomPadandCrop(32),
@@ -88,7 +87,6 @@ def load_data():
     x_train = train_data.data
     x_test = test_data.data
     y_train = train_data.targets
-    #print(y_train)
     y_test = test_data.targets
 
     X_train_true = np.zeros(shape=(50000, 3, 32, 32), dtype=float)
@@ -119,9 +117,6 @@ def load_data():
     X_test = []
 
 
-    X_train_by_class = [[], [], [], [], [], []]
-    train_labels_by_class = [[], [], [], [], [], []]
-
     for index, y in enumerate(train_y):
         #size_of_subset, subset_y, obfuscated_y = sub.index_to_stack_obfuscated(y)
         multi_hot_subset = sub.index_to_limited_subset(y)
@@ -141,15 +136,8 @@ def load_data():
     from torch.autograd import Variable
     print(torch.utils.data.dataloader.__file__)
 
-    train_loss = []
 
-    loader_by_class = []
-
-    normalize = T.Normalize(mean=[0.485, 0.456, 0.406],
-                                    std=[0.229, 0.224, 0.225])
-
-    transform = normalize
-
+  
     input = np.array(X_train).astype(np.float32)
     label = np.array(train_labels).astype(np.int64)
     true_labels = np.array(true_labels).astype(np.long)
